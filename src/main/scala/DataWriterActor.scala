@@ -37,7 +37,7 @@ class DataWriterActor(dataParser : ProcessedDataParser) {
       case DataWriterActor.RunCommand(command, replyToActor) =>
         try {
           DataWriterActor.UserQuery.withName(command) match {
-            case DataWriterActor.UserQuery.GetQueries => replyToActor ! ("Showing available queries below: \n\n" + DataWriterActor.getQueries)
+            case DataWriterActor.UserQuery.GetQueries => replyToActor ! ("Showing available queries below:\n\n" + DataWriterActor.getQueries)
 
             case DataWriterActor.UserQuery.ParseInitialFilesAndWriteParquetFile => replyToActor ! "Started parsing of input files, check out the jobs at " + InputDataParser.spark.sparkContext.uiWebUrl.get
               InputDataParser.parseInputFiles

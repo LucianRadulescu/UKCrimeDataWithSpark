@@ -13,8 +13,6 @@ import org.scalatest.{Matchers, WordSpec}
 class AppRoutesTest extends WordSpec with Matchers with ScalaFutures with ScalatestRouteTest {
   //#test-top
 
-  // the Akka HTTP route testkit does not yet support a typed actor system (https://github.com/akka/akka-http/issues/2036)
-  // so we have to adapt for now
   lazy val testKit = ActorTestKit()
   implicit def typedSystem = testKit.system
   override def createActorSystem(): akka.actor.ActorSystem =

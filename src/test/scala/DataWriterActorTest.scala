@@ -27,6 +27,12 @@ class DataWriterActorTest extends WordSpec with Matchers with ScalaFutures with 
       replyProbe.expectMessage(TestConstants.unknownCommandWriterText)
     }
 
+    "reply with list of available queries for GetQueries command" in {
+      val replyProbe = testKit.createTestProbe[String]()
+      dataWriterActor ! DataWriterActor.RunCommand("GetQueries", replyProbe.ref)
+      replyProbe.expectMessage(TestConstants.showQueriesWriterText)
+    }
+
     "call the correct parser method for WriteCrimeTypes command" in {
       // default mockito behavior will be to do nothing for void methods
       // doNothing().when(mockParser).writeCrimeTypesToJSON

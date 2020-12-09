@@ -1,23 +1,13 @@
-import akka.actor.Props
-import akka.actor.testkit.typed.scaladsl.{ActorTestKit, ScalaTestWithActorTestKit, TestProbe}
-import akka.actor.typed.{ActorRef, Behavior}
-import akka.actor.typed.scaladsl.AskPattern._
-import akka.actor.typed.scaladsl.Behaviors
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives.{complete, onSuccess}
+import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import akka.util.Timeout
-import assignment.spark.DataParserActor
-import org.scalatest.Matchers._
+import assignment.spark.ProcessedDataParser
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Matchers, WordSpec}
-
-import scala.concurrent.Future
-import scala.concurrent.Await
-import scala.concurrent.duration.DurationInt
+import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.Mockito.{doNothing, times, verify, when}
 
 //#set-up
-class DataViewerActorTest extends WordSpec with Matchers with ScalaFutures with ScalatestRouteTest {
+class DataViewerActorTest extends WordSpec with Matchers with ScalaFutures with ScalatestRouteTest with MockitoSugar {
   //#test-top
 
   lazy val testKit = ActorTestKit()
@@ -25,16 +15,54 @@ class DataViewerActorTest extends WordSpec with Matchers with ScalaFutures with 
   override def createActorSystem(): akka.actor.ActorSystem =
     testKit.system.classicSystem
 
-  val dataParserActor = testKit.spawn(new DataParserActor()())
-  val dataViewerActor = testKit.spawn(DataViewerActor(dataParserActor))
-  private implicit val timeout = Timeout(15.seconds)
+  val mockParser = mock[ProcessedDataParser]
+  val dataViewerActor = testKit.spawn(new DataViewerActor(mockParser)())
+
   // -- routing tests
   "DataViewerActor" should {
 
     "reply with list of available queries if the command is not recognized" in {
       val replyProbe = testKit.createTestProbe[String]()
-      dataViewerActor ! DataViewerActor.RunCommand("SomeCommand", Some("param"), replyProbe.ref)
+      dataViewerActor ! DataViewerActor.RunCommand("SomeCommand", None, replyProbe.ref)
       replyProbe.expectMessage(TestConstants.unknownCommandViewerText)
+    }
+
+    "reply with list of available queries for GetQueries command" in {
+      val replyProbe = testKit.createTestProbe[String]()
+      dataViewerActor ! DataViewerActor.RunCommand("GetQueries", None, replyProbe.ref)
+      replyProbe.expectMessage(TestConstants.showQueriesViewerText)
+    }
+
+    "call the correct parser method for GetCrimeTypes command" in {
+      when(mockParser.getCrimeTypes) thenReturn TestConstants.mockCrimeTypes
+
+      val replyProbe = testKit.createTestProbe[String]()
+      dataViewerActor ! DataViewerActor.RunCommand("GetCrimeTypes", None, replyProbe.ref)
+      replyProbe.expectMessage(TestConstants.viewerResponseGetCrimeTypes)
+
+      verify(mockParser, times(1)).getCrimeTypes
+    }
+
+    "call the correct parser method for GetDistricts command" in {
+      when(mockParser.getDistricts) thenReturn TestConstants.mockDistricts
+
+      val replyProbe = testKit.createTestProbe[String]()
+      dataViewerActor ! DataViewerActor.RunCommand("GetDistricts", None, replyProbe.ref)
+      replyProbe.expectMessage(TestConstants.viewerResponseGetDistricts)
+
+      verify(mockParser, times(1)).getDistricts
+    }
+
+    "call the correct parser method for GetCrimesForDistrict command" +
+      " with parameter ?district=northumbria" in {
+      val district = Some("northumbria")
+      when(mockParser.getCrimesForDistrict(district)) thenReturn TestConstants.mockCrimesForDistrict
+
+      val replyProbe = testKit.createTestProbe[String]()
+      dataViewerActor ! DataViewerActor.RunCommand("GetCrimesForDistrict", district, replyProbe.ref)
+      replyProbe.expectMessage(TestConstants.viewerResponseGetCrimesForDistrict)
+
+      verify(mockParser, times(1)).getCrimesForDistrict(_)
     }
   }
 }
