@@ -2,7 +2,7 @@ package assignment.spark
 
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
-object ProcessedDataParser{
+class ProcessedDataParser(){
   val spark = SparkSession.builder
     .master("local[*]")
     .appName("Input Parser")
@@ -25,7 +25,7 @@ object ProcessedDataParser{
     crimeTypes.coalesce(1).write.mode(SaveMode.Overwrite).json(filePathResultCrimeTypes)
   }
 
-  def getCrimeTypes = {
+  def getCrimeTypes: String = {
     crimeTypes.collect().mkString("\n")
   }
 
@@ -34,11 +34,11 @@ object ProcessedDataParser{
     districts.coalesce(1).write.mode(SaveMode.Overwrite).json(filePathResultDistricts)
   }
 
-  def getDistricts = {
+  def getDistricts: String = {
     districts.collect().mkString("\n")
   }
 
-  def getCrimesForDistrict(district : Option[String]) = {
+  def getCrimesForDistrict(district : Option[String]): String = {
     val filteredRawData =
       if(district.isDefined) rawData.filter(rawData("districtName") === district.get) else rawData
     val dataByDistrictCrime = filteredRawData.groupBy(rawData("districtName"), rawData("crimeType")).count()

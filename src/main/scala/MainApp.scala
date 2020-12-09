@@ -1,10 +1,9 @@
 import com.typesafe.config.ConfigFactory
-
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
-import assignment.spark.InputDataParser
+import assignment.spark.{DataParserActor, InputDataParser, ProcessedDataParser}
 
 import scala.util.Failure
 import scala.util.Success
@@ -38,8 +37,9 @@ object MainApp {
 
     //#server-bootstrapping
     val rootBehavior = Behaviors.setup[Nothing] { context =>
-      val dataViewerActor = context.spawn(DataViewerActor(), "DataViewerActor")
-      val dataWriterActor = context.spawn(DataWriterActor(), "DataWriterActor")
+      val dataParserActor = context.spawn(new DataParserActor()(), name = "DataParserActor")
+      val dataViewerActor = context.spawn(DataViewerActor(dataParserActor), "DataViewerActor")
+      val dataWriterActor = context.spawn(new DataWriterActor(new ProcessedDataParser)(), "DataWriterActor")
 
       context.watch(dataViewerActor)
       context.watch(dataWriterActor)

@@ -7,6 +7,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.{complete, onSuccess}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.util.Timeout
+import assignment.spark.DataParserActor
 import org.scalatest.Matchers._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Matchers, WordSpec}
@@ -24,7 +25,8 @@ class DataViewerActorTest extends WordSpec with Matchers with ScalaFutures with 
   override def createActorSystem(): akka.actor.ActorSystem =
     testKit.system.classicSystem
 
-  val dataViewerActor = testKit.spawn(DataViewerActor())
+  val dataParserActor = testKit.spawn(new DataParserActor()())
+  val dataViewerActor = testKit.spawn(DataViewerActor(dataParserActor))
   private implicit val timeout = Timeout(15.seconds)
   // -- routing tests
   "DataViewerActor" should {

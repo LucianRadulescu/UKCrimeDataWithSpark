@@ -6,7 +6,7 @@ import com.typesafe.config.ConfigFactory
 
 object DataWriterActor {
 
-  // available user queries
+  // -- enumeration holding the queries that the user can run
   object UserQuery extends Enumeration {
     type UserQuery = Value
     val ParseInitialFilesAndWriteParquetFile,
@@ -17,51 +17,56 @@ object DataWriterActor {
     GetQueries = Value
   }
 
-  def getQueries : String = {
+  def getQueries: String = {
     val serverInterface = ConfigFactory.load().getString("app.localServer.interface")
     val serverPort = ConfigFactory.load().getInt("app.localServer.port")
     val localAddress = "http://" + serverInterface + ":" + serverPort + "/"
     localAddress + "write/" + UserQuery.values.mkString("\n" + localAddress + "write/")
   }
+
   // actor protocol - these are the different messages that the actor knows how to handle
   sealed trait Command
   final case class RunCommand(command: String, replyTo: ActorRef[String]) extends Command
 
-  def apply(): Behavior[Command] = {
-    Behaviors.receiveMessage {
-      case RunCommand(command, replyToActor) =>
-        try {
-          UserQuery.withName(command) match {
-            case UserQuery.GetQueries => replyToActor ! ("Showing available queries below: \n\n" + getQueries)
+}
 
-            case UserQuery.ParseInitialFilesAndWriteParquetFile => replyToActor ! "Started parsing of input files, check out the jobs at " + InputDataParser.spark.sparkContext.uiWebUrl.get
+class DataWriterActor(dataParser : ProcessedDataParser) {
+
+  def apply(): Behavior[DataWriterActor.Command] = {
+    Behaviors.receiveMessage {
+      case DataWriterActor.RunCommand(command, replyToActor) =>
+        try {
+          DataWriterActor.UserQuery.withName(command) match {
+            case DataWriterActor.UserQuery.GetQueries => replyToActor ! ("Showing available queries below: \n\n" + DataWriterActor.getQueries)
+
+            case DataWriterActor.UserQuery.ParseInitialFilesAndWriteParquetFile => replyToActor ! "Started parsing of input files, check out the jobs at " + InputDataParser.spark.sparkContext.uiWebUrl.get
               InputDataParser.parseInputFiles
 
-            case UserQuery.WriteCrimeTypes => replyToActor ! ("Writing crime types to JSON file...\n\n" +
+            case DataWriterActor.UserQuery.WriteCrimeTypes => replyToActor ! ("Writing crime types to JSON file...\n\n" +
               "Check started jobs at " +
-              ProcessedDataParser.getSparkAddress)
-              ProcessedDataParser.writeCrimeTypesToJSON
+              dataParser.getSparkAddress)
+              dataParser.writeCrimeTypesToJSON
 
-            case UserQuery.WriteDistricts => replyToActor ! ("Writing districts names to JSON file...\n\n" +
+            case DataWriterActor.UserQuery.WriteDistricts => replyToActor ! ("Writing districts names to JSON file...\n\n" +
               "Check started jobs at " +
-              ProcessedDataParser.getSparkAddress)
-              ProcessedDataParser.writeDistrictsToJSON
+              dataParser.getSparkAddress)
+              dataParser.writeDistrictsToJSON
 
-            case UserQuery.WriteCrimesByDistrict => replyToActor ! ("Writing districts crimes to JSON file...\n\n" +
+            case DataWriterActor.UserQuery.WriteCrimesByDistrict => replyToActor ! ("Writing crimes by district to JSON file...\n\n" +
               "Check started jobs at " +
-              ProcessedDataParser.getSparkAddress)
-              ProcessedDataParser.writeCrimesByDistrictToJSON
+              dataParser.getSparkAddress)
+              dataParser.writeCrimesByDistrictToJSON
 
-            case UserQuery.WriteCrimesByCrimeType => replyToActor ! ("Writing crimes by crime type to JSON file...\n\n" +
+            case DataWriterActor.UserQuery.WriteCrimesByCrimeType => replyToActor ! ("Writing crimes by crime type to JSON file...\n\n" +
               "Check started jobs at " +
-              ProcessedDataParser.getSparkAddress)
-              ProcessedDataParser.writeCrimesByCrimeTypeToJSON
+              dataParser.getSparkAddress)
+              dataParser.writeCrimesByCrimeTypeToJSON
           }
         } catch {
           case e : NoSuchElementException => replyToActor ! (
             "Received unknown command \n" +
               command +
-              "\nTry one of the available queries from below: \n\n" + getQueries)
+              "\nTry one of the available queries from below: \n\n" + DataWriterActor.getQueries)
           case other => throw other
         }
         Behaviors.same
