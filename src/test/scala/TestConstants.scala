@@ -1,6 +1,6 @@
 object TestConstants {
 
-  val HomeText = "Oh, hello there... you can try to run some of the queries below. Cheerios, Lucian !\n\nhttp://localhost:8080/view/GetQueries\nhttp://localhost:8080/view/GetCrimeTypes\nhttp://localhost:8080/view/GetDistricts\nhttp://localhost:8080/view/GetCrimesForDistrict \n\nor\n\nhttp://localhost:8080/write/ParseInitialFilesAndWriteParquetFile\nhttp://localhost:8080/write/WriteCrimeTypes\nhttp://localhost:8080/write/WriteDistricts\nhttp://localhost:8080/write/WriteCrimesByDistrict\nhttp://localhost:8080/write/WriteCrimesByCrimeType\nhttp://localhost:8080/write/GetQueries"
+  val HomeText = "Oh, hello there... you can try to run some of the queries below. Cheers, Lucian !\n\nhttp://localhost:8080/view/GetQueries\nhttp://localhost:8080/view/GetCrimeTypes\nhttp://localhost:8080/view/GetDistricts\nhttp://localhost:8080/view/GetCrimesForDistrict \n\nor\n\nhttp://localhost:8080/write/ParseInitialFilesAndWriteParquetFile\nhttp://localhost:8080/write/WriteCrimeTypes\nhttp://localhost:8080/write/WriteDistricts\nhttp://localhost:8080/write/WriteCrimesByDistrict\nhttp://localhost:8080/write/WriteCrimesByCrimeType\nhttp://localhost:8080/write/GetQueries"
 
   val MockReplyViewer = "This is a mock reply from a Mock Viewer Actor"
   val MockReplyWriter = "This is a mock reply from a Mock Writer Actor"

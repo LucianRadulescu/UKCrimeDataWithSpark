@@ -1,17 +1,12 @@
-import DataViewerActor.RunCommand
-import akka.actor.Props
-import akka.actor.testkit.typed.scaladsl.{ActorTestKit, TestProbe}
+import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.actor.typed.{ActorRef, Behavior}
-import akka.actor.typed.scaladsl.AskPattern.Askable
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Matchers, WordSpec}
 
-//#set-up
 class AppRoutesTest extends WordSpec with Matchers with ScalaFutures with ScalatestRouteTest {
-  //#test-top
 
   lazy val testKit = ActorTestKit()
   implicit def typedSystem = testKit.system
@@ -48,10 +43,6 @@ class AppRoutesTest extends WordSpec with Matchers with ScalaFutures with Scalat
   val mockDataWriterActor = testKit.spawn(MockWriterActor())
 
   lazy val routes = new AppRoutes(mockDataViewerActor, mockDataWriterActor).topLevelRoute
-
-  // use the json formats to marshal and unmarshall objects in the test
-  import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
-  //#set-up
 
   // -- routing tests
   "AppRoutes" should {
@@ -97,8 +88,7 @@ class AppRoutesTest extends WordSpec with Matchers with ScalaFutures with Scalat
       }
     }
 
-    // -- write routes
-    // -- view routes
+    // -- write route
     "correctly route command http://localhost:8080/write to the mock Write" in {
       val request = HttpRequest(uri = "/write")
 
@@ -119,6 +109,4 @@ class AppRoutesTest extends WordSpec with Matchers with ScalaFutures with Scalat
       }
     }
   }
-
-  //#set-up
 }

@@ -2,13 +2,10 @@ import assignment.spark.ProcessedDataParser
 import org.scalatest.{Matchers, WordSpec}
 import java.io._
 import scala.reflect.io.Directory
-
 import com.typesafe.config.ConfigFactory
 
 
-//#set-up
 class ProcessedDataParserTest extends WordSpec with Matchers {
-  //#test-top
 
   val dataParser = new ProcessedDataParser()
 
@@ -104,11 +101,10 @@ class ProcessedDataParserTest extends WordSpec with Matchers {
     "return the correct spark address" in {
 
       // default spark address
-      dataParser.getSparkAddress should ===("http://host.docker.internal:4040")
+      ProcessedDataParser.getSparkAddress should ===("http://host.docker.internal:4040")
 
     }
 
     }
 
-  //#set-up
 }

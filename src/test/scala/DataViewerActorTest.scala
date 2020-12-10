@@ -4,17 +4,18 @@ import assignment.spark.ProcessedDataParser
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
-import org.mockito.Mockito.{doNothing, times, verify, when}
+import org.mockito.Mockito.{reset, times, verify, when}
 
-//#set-up
+
 class DataViewerActorTest extends WordSpec with Matchers with ScalaFutures with ScalatestRouteTest with MockitoSugar {
-  //#test-top
 
   lazy val testKit = ActorTestKit()
   implicit def typedSystem = testKit.system
   override def createActorSystem(): akka.actor.ActorSystem =
     testKit.system.classicSystem
 
+
+  // todo move mock and dataViewerActor to each test to make them independent
   val mockParser = mock[ProcessedDataParser]
   val dataViewerActor = testKit.spawn(new DataViewerActor(mockParser)())
 
@@ -63,6 +64,18 @@ class DataViewerActorTest extends WordSpec with Matchers with ScalaFutures with 
       replyProbe.expectMessage(TestConstants.ViewerResponseGetCrimesForDistrict)
 
       verify(mockParser, times(1)).getCrimesForDistrict(_)
+    }
+
+    "handle exceptions thrown by the parser" in {
+      reset(mockParser)
+      val e: Throwable = new RuntimeException("Test exception")
+      when(mockParser.getDistricts) thenThrow e
+
+      val replyProbe = testKit.createTestProbe[String]()
+      dataViewerActor ! DataViewerActor.RunCommand("GetDistricts", None, replyProbe.ref)
+      replyProbe.expectMessage("Encountered exception\n" + e.getMessage)
+
+      verify(mockParser, times(1)).getDistricts
     }
   }
 }

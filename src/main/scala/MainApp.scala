@@ -3,15 +3,16 @@ import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
-import assignment.spark.{InputDataParser, ProcessedDataParser}
+import org.apache.spark.sql.SparkSession
 
 import scala.util.Failure
 import scala.util.Success
 
-//#main-class
 object MainApp {
 
-  //#start-http-server
+  /**
+   * Starts the akka http server
+   */
   private def startHttpServer(routes: Route)(implicit system: ActorSystem[_]): Unit = {
     // Akka HTTP still needs a classic ActorSystem to start
     import system.executionContext
@@ -32,14 +33,17 @@ object MainApp {
   }
 
   def main(args: Array[String]): Unit = {
-    //#start spark
-    InputDataParser.spark
+    // spark init before starting the server so users won't wait for it when the server is up
+    SparkSession.builder
+      .master("local[*]")
+      .appName("Input Parser")
+      .getOrCreate()
 
-    //#server-bootstrapping
+    // server bootstrapping
     val rootBehavior = Behaviors.setup[Nothing] { context =>
-      val aDataParser = new ProcessedDataParser();
-      val dataViewerActor = context.spawn(new DataViewerActor(aDataParser)(), "DataViewerActor")
-      val dataWriterActor = context.spawn(new DataWriterActor(aDataParser)(), "DataWriterActor")
+
+      val dataViewerActor = context.spawn(new DataViewerActor()(), "DataViewerActor")
+      val dataWriterActor = context.spawn(new DataWriterActor()(), "DataWriterActor")
 
       context.watch(dataViewerActor)
       context.watch(dataWriterActor)
@@ -50,8 +54,5 @@ object MainApp {
       Behaviors.empty
     }
     val system = ActorSystem[Nothing](rootBehavior, "UKCrimeDataWithSparkActorSystem")
-    //#server-bootstrapping
-
   }
 }
-//#main-class

@@ -1,4 +1,3 @@
-
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 
@@ -13,7 +12,7 @@ import scala.concurrent.duration.DurationInt
 class AppRoutes(dataViewerActor: ActorRef[DataViewerActor.Command],
                 dataWriterActor: ActorRef[DataWriterActor.Command])(implicit val system: ActorSystem[_]) {
 
-  // If ask takes more time than this to complete the request is failed
+  // If ask takes more time than this to complete then the request is failed
   private implicit val timeout = Timeout(15.seconds)
 
   def dispatchCommandToDataViewerActor(command: String, district : Option[String] = None): Future[String] = {
@@ -28,10 +27,10 @@ class AppRoutes(dataViewerActor: ActorRef[DataViewerActor.Command],
     concat(
       pathPrefix("view")(viewRoutes),
       pathPrefix("write")(writeRoutes),
-      pathEndOrSingleSlash { complete("Oh, hello there... you can try to run some of the queries below. Cheerios, Lucian !\n\n" +
-        DataViewerActor.getQueries +
+      pathEndOrSingleSlash { complete("Oh, hello there... you can try to run some of the queries below. Cheers, Lucian !\n\n" +
+        DataViewerActor.getViewQueries +
         " \n\nor\n\n" +
-        DataWriterActor.getQueries) }
+        DataWriterActor.getWriteQueries) }
     )
 
   lazy val writeRoutes: Route =

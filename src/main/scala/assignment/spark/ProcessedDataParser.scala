@@ -1,26 +1,24 @@
 package assignment.spark
-
 import com.typesafe.config.ConfigFactory
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
-class ProcessedDataParser(){
-
+object ProcessedDataParser {
   // -- constants
-  val CrimeId      = "crimeId"
-  val Longitude    = "longitude"
-  val Latitude     = "latitude"
-  val CrimeType    = "crimeType"
-  val LastOutcome  = "lastOutcome"
-  val DistrictName = "districtName"
+  private val CrimeId = "crimeId"
+  private val Longitude = "longitude"
+  private val Latitude = "latitude"
+  private val CrimeType = "crimeType"
+  private val LastOutcome = "lastOutcome"
+  private val DistrictName = "districtName"
   // --
 
   // -- load paths from configuration
-  lazy val filePathResult: String           = ConfigFactory.load().getString("app.spark.filePathResult")
-  lazy val fileNameResult: String           = ConfigFactory.load().getString("app.spark.fileNameResult")
-  lazy val filePathResultCrimeTypes: String = ConfigFactory.load().getString("app.spark.filePathResultCrimeTypes")
-  lazy val filePathResultDistricts: String          = ConfigFactory.load().getString("app.spark.filePathResultDistricts")
-  lazy val filePathResultCrimesByDistrict: String   = ConfigFactory.load().getString("app.spark.filePathResultCrimesByDistrict")
-  lazy val filePathResultCrimesByCrimeType: String  = ConfigFactory.load().getString("app.spark.filePathResultCrimesByCrimeType")
+  private lazy val configFilePathResult: String = ConfigFactory.load().getString("app.spark.filePathResult")
+  private lazy val configFileNameResult: String = ConfigFactory.load().getString("app.spark.fileNameResult")
+  private lazy val configFilePathResultCrimeTypes: String = ConfigFactory.load().getString("app.spark.filePathResultCrimeTypes")
+  private lazy val configFilePathResultDistricts: String = ConfigFactory.load().getString("app.spark.filePathResultDistricts")
+  private lazy val configFilePathResultCrimesByDistrict: String = ConfigFactory.load().getString("app.spark.filePathResultCrimesByDistrict")
+  private lazy val configFilePathResultCrimesByCrimeType: String = ConfigFactory.load().getString("app.spark.filePathResultCrimesByCrimeType")
   // --
 
   private lazy val spark = SparkSession.builder
@@ -28,11 +26,15 @@ class ProcessedDataParser(){
     .appName("Spark Data Parser")
     .getOrCreate()
 
-  private lazy val rawData    = spark.read.parquet(filePathResult + fileNameResult)
+  private lazy val rawData = spark.read.parquet(configFilePathResult + configFileNameResult)
   private lazy val crimeTypes = rawData.select(CrimeType).dropDuplicates(CrimeType)
-  private lazy val districts  = rawData.select(DistrictName).dropDuplicates(DistrictName)
+  private lazy val districts = rawData.select(DistrictName).dropDuplicates(DistrictName)
 
   def getSparkAddress: String = spark.sparkContext.uiWebUrl.get
+}
+
+class ProcessedDataParser() {
+    import assignment.spark.ProcessedDataParser._
 
   def getCrimeTypes: String = {
     crimeTypes.collect().mkString("\n")
@@ -50,23 +52,23 @@ class ProcessedDataParser(){
       .collect().mkString("\n")
   }
 
-  def writeCrimeTypesToJSON(path: String = filePathResultCrimeTypes): Unit = {
+  def writeCrimeTypesToJSON(path: String = configFilePathResultCrimeTypes): Unit = {
     // To write to a single partition as to have only one json file
     crimeTypes.coalesce(1).write.mode(SaveMode.Overwrite).json(path)
   }
 
-  def writeDistrictsToJSON(path: String = filePathResultDistricts): Unit = {
+  def writeDistrictsToJSON(path: String = configFilePathResultDistricts): Unit = {
     // To write to a single partition as to have only one json file
     districts.coalesce(1).write.mode(SaveMode.Overwrite).json(path)
   }
 
-  def writeCrimesByDistrictToJSON(path: String = filePathResultCrimesByDistrict): Unit = {
+  def writeCrimesByDistrictToJSON(path: String = configFilePathResultCrimesByDistrict): Unit = {
     val dataByDistrictCrime = rawData.groupBy(rawData(DistrictName), rawData(CrimeType)).count()
     dataByDistrictCrime.orderBy(dataByDistrictCrime(DistrictName), dataByDistrictCrime("count").desc)
       .coalesce(1).write.mode(SaveMode.Overwrite).json(path)
   }
 
-  def writeCrimesByCrimeTypeToJSON(path: String = filePathResultCrimesByCrimeType): Unit = {
+  def writeCrimesByCrimeTypeToJSON(path: String = configFilePathResultCrimesByCrimeType): Unit = {
     val dataByCrimeCount = rawData.groupBy(rawData(CrimeType)).count()
     dataByCrimeCount.orderBy(dataByCrimeCount("count").desc)
       .coalesce(1).write.mode(SaveMode.Overwrite).json(path)
