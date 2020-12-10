@@ -45,29 +45,31 @@ class DataWriterActor(dataParser : ProcessedDataParser) {
             case DataWriterActor.UserQuery.WriteCrimeTypes => replyToActor ! ("Writing crime types to JSON file...\n\n" +
               "Check started jobs at " +
               dataParser.getSparkAddress)
-              dataParser.writeCrimeTypesToJSON(_)
+              dataParser.writeCrimeTypesToJSON()
 
             case DataWriterActor.UserQuery.WriteDistricts => replyToActor ! ("Writing districts names to JSON file...\n\n" +
               "Check started jobs at " +
               dataParser.getSparkAddress)
-              dataParser.writeDistrictsToJSON(_)
+              dataParser.writeDistrictsToJSON()
 
             case DataWriterActor.UserQuery.WriteCrimesByDistrict => replyToActor ! ("Writing crimes by district to JSON file...\n\n" +
               "Check started jobs at " +
               dataParser.getSparkAddress)
-              dataParser.writeCrimesByDistrictToJSON(_)
+              dataParser.writeCrimesByDistrictToJSON()
 
             case DataWriterActor.UserQuery.WriteCrimesByCrimeType => replyToActor ! ("Writing crimes by crime type to JSON file...\n\n" +
               "Check started jobs at " +
               dataParser.getSparkAddress)
-              dataParser.writeCrimesByCrimeTypeToJSON(_)
+              dataParser.writeCrimesByCrimeTypeToJSON()
           }
         } catch {
           case e : NoSuchElementException => replyToActor ! (
             "Received unknown command \n" +
               command +
               "\nTry one of the available queries from below: \n\n" + DataWriterActor.getQueries)
-          case other => throw other
+          case other => replyToActor ! (
+            "Encountered exception" +
+              other.getMessage())
         }
         Behaviors.same
     }

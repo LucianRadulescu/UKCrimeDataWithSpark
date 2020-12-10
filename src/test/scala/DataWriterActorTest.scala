@@ -44,7 +44,7 @@ class DataWriterActorTest extends WordSpec with Matchers with ScalaFutures with 
       replyProbe.expectMessage(TestConstants.WriterResponseWriteCrimeTypes)
 
 
-      verify(mockParser, times(1)).writeCrimeTypesToJSON(_)
+      verify(mockParser, times(1)).writeCrimeTypesToJSON()
     }
 
     "call the correct parser method for WriteDistricts command" in {
@@ -58,7 +58,7 @@ class DataWriterActorTest extends WordSpec with Matchers with ScalaFutures with 
       replyProbe.expectMessage(TestConstants.WriterResponseWriteDistricts)
 
 
-      verify(mockParser, times(1)).writeDistrictsToJSON(_)
+      verify(mockParser, times(1)).writeDistrictsToJSON()
     }
 
     "call the correct parser method for WriteCrimesByDistrict command" in {
@@ -72,7 +72,7 @@ class DataWriterActorTest extends WordSpec with Matchers with ScalaFutures with 
       replyProbe.expectMessage(TestConstants.WriterResponseWriteCrimesByDistrict)
 
 
-      verify(mockParser, times(1)).writeCrimesByDistrictToJSON(_)
+      verify(mockParser, times(1)).writeCrimesByDistrictToJSON()
     }
 
     "call the correct parser method for WriteCrimesByCrimeType command" in {
@@ -86,7 +86,7 @@ class DataWriterActorTest extends WordSpec with Matchers with ScalaFutures with 
       replyProbe.expectMessage(TestConstants.WriterResponseWriteCrimesByCrimeType)
 
 
-      verify(mockParser, times(1)).writeCrimesByCrimeTypeToJSON(_)
+      verify(mockParser, times(1)).writeCrimesByCrimeTypeToJSON()
     }
   }
 }

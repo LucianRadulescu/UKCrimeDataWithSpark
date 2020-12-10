@@ -1,8 +1,5 @@
 package assignment.spark
 
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
 import com.typesafe.config.ConfigFactory
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.{array, broadcast, callUDF, coalesce, col, countDistinct, explode, input_file_name, lit, rand}
@@ -31,14 +28,15 @@ object InputDataParser{
     .appName("Input Parser")
     .getOrCreate()
 
-  val filePathResult = "Result/"
+  lazy val filePathResult = ConfigFactory.load().getString("app.spark.filePathResult")
+  lazy val fileNameResult = ConfigFactory.load().getString("app.spark.fileNameResult")
 
   // -- input file path matchers:
   // "CSV_Resources/UK_CrimeData/*/*-street.csv""
   // "CSV_Resources/UK_CrimeData/*/*-outcomes.csv"
 
-  val filePathStreet = ConfigFactory.load().getString("app.spark.filePathInput") + "/*/*-street.csv"
-  val filePathOutcomes = ConfigFactory.load().getString("app.spark.filePathInput") + "/*/*-outcomes.csv"
+  lazy val filePathStreet = ConfigFactory.load().getString("app.spark.filePathInput") + "/*/*-street.csv"
+  lazy val filePathOutcomes = ConfigFactory.load().getString("app.spark.filePathInput") + "/*/*-outcomes.csv"
 
   val schemaStreet = new StructType()
     .add(CrimeId,StringType,true)
@@ -84,7 +82,6 @@ object InputDataParser{
       .withColumn(DistrictName, callUDF("get_district", input_file_name()))
 
     val result = streetDataNoNullKeys.join(outcomesData,
-      //streetDataNoNullKeys("crimeId") === outcomesData("crimeId"), //~ 1.7 min
       Seq(CrimeId, DistrictName),
       joinType = "leftouter")
       .select(streetDataNoNullKeys(CrimeId),
@@ -100,7 +97,6 @@ object InputDataParser{
         streetDataOnlyNullKeys(CrimeType),
         streetDataOnlyNullKeys(LastOutcome)))
 
-    val timesStamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
-    result.write.parquet(filePathResult + timesStamp + "_result.parquet")
+    result.write.parquet(filePathResult + fileNameResult)
   }
 }

@@ -25,4 +25,17 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion     % Test,
   "org.scalatest"     %% "scalatest"                % "3.0.8"         % Test,
   "org.mockito"       %  "mockito-core"             % "2.8.47"        % Test
+
 )
+
+assemblyMergeStrategy in assembly := {
+  case n if n.contains("services") => MergeStrategy.concat
+  case PathList("reference.conf") => MergeStrategy.concat
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case x => MergeStrategy.first
+}
+
+test in assembly := {}
+
+mainClass in assembly := Some("MainApp")
+

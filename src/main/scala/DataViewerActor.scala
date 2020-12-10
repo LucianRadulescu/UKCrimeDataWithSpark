@@ -54,7 +54,12 @@ class DataViewerActor(dataParser : ProcessedDataParser) {
               command +
               "\nTry one of the available queries from below: \n\n" +
               DataViewerActor.getQueries)
-          case other => throw other
+          case e : org.apache.spark.sql.AnalysisException =>  replyToActor ! (
+            "Spark sql query failed with \n" +
+              e.getMessage())
+          case other => replyToActor ! (
+            "Encountered exception" +
+              other.getMessage())
         }
         Behaviors.same
     }
