@@ -24,31 +24,31 @@ class DataViewerActorTest extends WordSpec with Matchers with ScalaFutures with 
     "reply with list of available queries if the command is not recognized" in {
       val replyProbe = testKit.createTestProbe[String]()
       dataViewerActor ! DataViewerActor.RunCommand("SomeCommand", None, replyProbe.ref)
-      replyProbe.expectMessage(TestConstants.unknownCommandViewerText)
+      replyProbe.expectMessage(TestConstants.UnknownCommandViewerText)
     }
 
     "reply with list of available queries for GetQueries command" in {
       val replyProbe = testKit.createTestProbe[String]()
       dataViewerActor ! DataViewerActor.RunCommand("GetQueries", None, replyProbe.ref)
-      replyProbe.expectMessage(TestConstants.showQueriesViewerText)
+      replyProbe.expectMessage(TestConstants.ShowQueriesViewerText)
     }
 
     "call the correct parser method for GetCrimeTypes command" in {
-      when(mockParser.getCrimeTypes) thenReturn TestConstants.mockCrimeTypes
+      when(mockParser.getCrimeTypes) thenReturn TestConstants.MockCrimeTypes
 
       val replyProbe = testKit.createTestProbe[String]()
       dataViewerActor ! DataViewerActor.RunCommand("GetCrimeTypes", None, replyProbe.ref)
-      replyProbe.expectMessage(TestConstants.viewerResponseGetCrimeTypes)
+      replyProbe.expectMessage(TestConstants.ViewerResponseGetCrimeTypes)
 
       verify(mockParser, times(1)).getCrimeTypes
     }
 
     "call the correct parser method for GetDistricts command" in {
-      when(mockParser.getDistricts) thenReturn TestConstants.mockDistricts
+      when(mockParser.getDistricts) thenReturn TestConstants.MockDistricts
 
       val replyProbe = testKit.createTestProbe[String]()
       dataViewerActor ! DataViewerActor.RunCommand("GetDistricts", None, replyProbe.ref)
-      replyProbe.expectMessage(TestConstants.viewerResponseGetDistricts)
+      replyProbe.expectMessage(TestConstants.ViewerResponseGetDistricts)
 
       verify(mockParser, times(1)).getDistricts
     }
@@ -56,11 +56,11 @@ class DataViewerActorTest extends WordSpec with Matchers with ScalaFutures with 
     "call the correct parser method for GetCrimesForDistrict command" +
       " with parameter ?district=northumbria" in {
       val district = Some("northumbria")
-      when(mockParser.getCrimesForDistrict(district)) thenReturn TestConstants.mockCrimesForDistrict
+      when(mockParser.getCrimesForDistrict(district)) thenReturn TestConstants.MockCrimesForDistrict
 
       val replyProbe = testKit.createTestProbe[String]()
       dataViewerActor ! DataViewerActor.RunCommand("GetCrimesForDistrict", district, replyProbe.ref)
-      replyProbe.expectMessage(TestConstants.viewerResponseGetCrimesForDistrict)
+      replyProbe.expectMessage(TestConstants.ViewerResponseGetCrimesForDistrict)
 
       verify(mockParser, times(1)).getCrimesForDistrict(_)
     }

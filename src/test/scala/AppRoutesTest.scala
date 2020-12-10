@@ -26,7 +26,7 @@ class AppRoutesTest extends WordSpec with Matchers with ScalaFutures with Scalat
     def apply(): Behavior[DataViewerActor.Command] = {
       Behaviors.receiveMessage {
         case DataViewerActor.RunCommand(command: String, district : Option[String], replyToActor: ActorRef[String]) =>
-          replyToActor ! TestConstants.mockReplyViewer
+          replyToActor ! TestConstants.MockReplyViewer
           Behaviors.same
       }
     }
@@ -37,7 +37,7 @@ class AppRoutesTest extends WordSpec with Matchers with ScalaFutures with Scalat
     def apply(): Behavior[DataWriterActor.Command] = {
       Behaviors.receiveMessage {
         case DataWriterActor.RunCommand(command: String, replyToActor: ActorRef[String]) =>
-          replyToActor ! TestConstants.mockReplyWriter
+          replyToActor ! TestConstants.MockReplyWriter
           Behaviors.same
       }
     }
@@ -62,7 +62,7 @@ class AppRoutesTest extends WordSpec with Matchers with ScalaFutures with Scalat
       request ~> routes ~> check {
         status should ===(StatusCodes.OK)
 
-        entityAs[String] should ===(TestConstants.homeText)
+        entityAs[String] should ===(TestConstants.HomeText)
       }
     }
 
@@ -73,7 +73,7 @@ class AppRoutesTest extends WordSpec with Matchers with ScalaFutures with Scalat
       request ~> routes ~> check {
         status should ===(StatusCodes.OK)
 
-        entityAs[String] should ===(TestConstants.mockReplyViewer)
+        entityAs[String] should ===(TestConstants.MockReplyViewer)
       }
     }
 
@@ -83,7 +83,7 @@ class AppRoutesTest extends WordSpec with Matchers with ScalaFutures with Scalat
       request ~> routes ~> check {
         status should ===(StatusCodes.OK)
 
-        entityAs[String] should ===(TestConstants.mockReplyViewer)
+        entityAs[String] should ===(TestConstants.MockReplyViewer)
       }
     }
 
@@ -93,7 +93,7 @@ class AppRoutesTest extends WordSpec with Matchers with ScalaFutures with Scalat
       request ~> routes ~> check {
         status should ===(StatusCodes.OK)
 
-        entityAs[String] should ===(TestConstants.mockReplyViewer)
+        entityAs[String] should ===(TestConstants.MockReplyViewer)
       }
     }
 
@@ -105,7 +105,7 @@ class AppRoutesTest extends WordSpec with Matchers with ScalaFutures with Scalat
       request ~> routes ~> check {
         status should ===(StatusCodes.OK)
 
-        entityAs[String] should ===(TestConstants.mockReplyWriter)
+        entityAs[String] should ===(TestConstants.MockReplyWriter)
       }
     }
 
@@ -115,7 +115,7 @@ class AppRoutesTest extends WordSpec with Matchers with ScalaFutures with Scalat
       request ~> routes ~> check {
         status should ===(StatusCodes.OK)
 
-        entityAs[String] should ===(TestConstants.mockReplyWriter)
+        entityAs[String] should ===(TestConstants.MockReplyWriter)
       }
     }
   }

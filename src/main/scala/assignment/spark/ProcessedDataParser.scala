@@ -1,37 +1,40 @@
 package assignment.spark
 
+import com.typesafe.config.ConfigFactory
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
 class ProcessedDataParser(){
+
+  // -- constants
+  val CrimeId      = "crimeId"
+  val Longitude    = "longitude"
+  val Latitude     = "latitude"
+  val CrimeType    = "crimeType"
+  val LastOutcome  = "lastOutcome"
+  val DistrictName = "districtName"
+  // --
+
+  // -- load paths from configuration
+  val filePathResult           = ConfigFactory.load().getString("app.spark.filePathResult")
+  val filePathResultCrimeTypes = ConfigFactory.load().getString("app.spark.filePathResultCrimeTypes")
+  val filePathResultDistricts  = ConfigFactory.load().getString("app.spark.filePathResultDistricts")
+  val filePathResultCrimesByDistrict  = ConfigFactory.load().getString("app.spark.filePathResultCrimesByDistrict")
+  val filePathResultCrimesByCrimeType = ConfigFactory.load().getString("app.spark.filePathResultCrimesByCrimeType")
+  // --
+
   val spark = SparkSession.builder
     .master("local[*]")
-    .appName("Input Parser")
+    .appName("Spark Data Parser")
     .getOrCreate()
 
   def getSparkAddress: String = spark.sparkContext.uiWebUrl.get
 
-  val filePathResult = "Result/result.parquet"
-  val filePathResultCrimeTypes = "Result/crimeTypes.json"
-  val filePathResultDistricts = "Result/districts.json"
-  val filePathResultCrimesByDistrict = "Result/crimesByDistrict.json"
-  val filePathResultCrimesByCrimeType = "Result/crimesByCrimeType.json"
-
   val rawData = spark.read.parquet(filePathResult)
-  val crimeTypes = rawData.select("crimeType").dropDuplicates("crimeType")
-  val districts = rawData.select("districtName").dropDuplicates("districtName")
-
-  def writeCrimeTypesToJSON = {
-    // To write to a single partition as to have only one json file
-    crimeTypes.coalesce(1).write.mode(SaveMode.Overwrite).json(filePathResultCrimeTypes)
-  }
+  val crimeTypes = rawData.select(CrimeType).dropDuplicates(CrimeType)
+  val districts = rawData.select(DistrictName).dropDuplicates(DistrictName)
 
   def getCrimeTypes: String = {
     crimeTypes.collect().mkString("\n")
-  }
-
-  def writeDistrictsToJSON = {
-    // To write to a single partition as to have only one json file
-    districts.coalesce(1).write.mode(SaveMode.Overwrite).json(filePathResultDistricts)
   }
 
   def getDistricts: String = {
@@ -40,22 +43,32 @@ class ProcessedDataParser(){
 
   def getCrimesForDistrict(district : Option[String]): String = {
     val filteredRawData =
-      if(district.isDefined) rawData.filter(rawData("districtName") === district.get) else rawData
-    val dataByDistrictCrime = filteredRawData.groupBy(rawData("districtName"), rawData("crimeType")).count()
-    dataByDistrictCrime.orderBy(dataByDistrictCrime("districtName"), dataByDistrictCrime("count").desc)
+      if(district.isDefined) rawData.filter(rawData(DistrictName) === district.get) else rawData
+    val dataByDistrictCrime = filteredRawData.groupBy(rawData(DistrictName), rawData(CrimeType)).count()
+    dataByDistrictCrime.orderBy(dataByDistrictCrime(DistrictName), dataByDistrictCrime("count").desc)
       .collect().mkString("\n")
   }
 
-  def writeCrimesByDistrictToJSON = {
-    val dataByDistrictCrime = rawData.groupBy(rawData("districtName"), rawData("crimeType")).count()
-    dataByDistrictCrime.orderBy(dataByDistrictCrime("districtName"), dataByDistrictCrime("count").desc)
-      .coalesce(1).write.mode(SaveMode.Overwrite).json(filePathResultCrimesByDistrict)
+  def writeCrimeTypesToJSON(path: String = filePathResultCrimeTypes) = {
+    // To write to a single partition as to have only one json file
+    crimeTypes.coalesce(1).write.mode(SaveMode.Overwrite).json(path)
   }
 
-  def writeCrimesByCrimeTypeToJSON = {
-    val dataByCrimeCount = rawData.groupBy(rawData("crimeType")).count()
+  def writeDistrictsToJSON(path: String = filePathResultDistricts) = {
+    // To write to a single partition as to have only one json file
+    districts.coalesce(1).write.mode(SaveMode.Overwrite).json(path)
+  }
+
+  def writeCrimesByDistrictToJSON(path: String = filePathResultCrimesByDistrict) = {
+    val dataByDistrictCrime = rawData.groupBy(rawData(DistrictName), rawData(CrimeType)).count()
+    dataByDistrictCrime.orderBy(dataByDistrictCrime(DistrictName), dataByDistrictCrime("count").desc)
+      .coalesce(1).write.mode(SaveMode.Overwrite).json(path)
+  }
+
+  def writeCrimesByCrimeTypeToJSON(path: String = filePathResultCrimesByCrimeType) = {
+    val dataByCrimeCount = rawData.groupBy(rawData(CrimeType)).count()
     dataByCrimeCount.orderBy(dataByCrimeCount("count").desc)
-      .coalesce(1).write.mode(SaveMode.Overwrite).json(filePathResultCrimesByCrimeType)
+      .coalesce(1).write.mode(SaveMode.Overwrite).json(path)
   }
 
 }

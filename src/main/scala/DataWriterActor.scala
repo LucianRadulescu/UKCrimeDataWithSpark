@@ -45,22 +45,22 @@ class DataWriterActor(dataParser : ProcessedDataParser) {
             case DataWriterActor.UserQuery.WriteCrimeTypes => replyToActor ! ("Writing crime types to JSON file...\n\n" +
               "Check started jobs at " +
               dataParser.getSparkAddress)
-              dataParser.writeCrimeTypesToJSON
+              dataParser.writeCrimeTypesToJSON(_)
 
             case DataWriterActor.UserQuery.WriteDistricts => replyToActor ! ("Writing districts names to JSON file...\n\n" +
               "Check started jobs at " +
               dataParser.getSparkAddress)
-              dataParser.writeDistrictsToJSON
+              dataParser.writeDistrictsToJSON(_)
 
             case DataWriterActor.UserQuery.WriteCrimesByDistrict => replyToActor ! ("Writing crimes by district to JSON file...\n\n" +
               "Check started jobs at " +
               dataParser.getSparkAddress)
-              dataParser.writeCrimesByDistrictToJSON
+              dataParser.writeCrimesByDistrictToJSON(_)
 
             case DataWriterActor.UserQuery.WriteCrimesByCrimeType => replyToActor ! ("Writing crimes by crime type to JSON file...\n\n" +
               "Check started jobs at " +
               dataParser.getSparkAddress)
-              dataParser.writeCrimesByCrimeTypeToJSON
+              dataParser.writeCrimesByCrimeTypeToJSON(_)
           }
         } catch {
           case e : NoSuchElementException => replyToActor ! (
