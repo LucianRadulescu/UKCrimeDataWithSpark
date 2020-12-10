@@ -36,7 +36,7 @@ object MainApp {
     // spark init before starting the server so users won't wait for it when the server is up
     SparkSession.builder
       .master("local[*]")
-      .appName("Input Parser")
+      .appName("Spark Parser")
       .getOrCreate()
 
     // server bootstrapping
