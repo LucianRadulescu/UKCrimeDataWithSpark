@@ -1,13 +1,13 @@
-#Spark Assessment
+# Spark Assessment
 ================
 
-##About
+## About
 -----
 
-This project is an application that parses UK Crime Data files and 
+This application parses UK Crime Data files and 
 provides the user with an interface to extract information from these files.
 
-##Setup
+## Setup
 -----
 The application is packaged with sbt-assembly in a fat jar file:
 
@@ -51,7 +51,7 @@ under CSV_Resources/UK_CrimeData. It should look like this:
 | UKCrimeDataWithSpark.bat
 ```
 
-##Run
+## Run
 -----
 The application starts a sever at http://localhost:8080.
 
@@ -63,51 +63,54 @@ Functionality is divided in two, writer and viewer. If you run GET on:
 	http://localhost:8080/view/GetQueries
 you will see available requests that you can perform.
 
-The main job that parses input file is started by running, and **should run first**.
+The main job that parses input files is started by running, and **should be run first**.
 
 	http://localhost:8080/write/ParseInitialFilesAndWriteParquetFile
 It will generate the Result/result.parquet file that is used by the other requests.
 
-You can then run some view commands to view some data aggregations:
+You can then run some commands to view some data aggregations:
 
 	http://localhost:8080/view/GetCrimeTypes
 	http://localhost:8080/view/GetDistricts
 	http://localhost:8080/view/GetCrimesForDistrict
-or you can launch some commands to write data aggregations to files:
+or you can launch commands to write data to files:
 
 	http://localhost:8080/write/WriteCrimeTypes
 	http://localhost:8080/write/WriteDistricts
 	http://localhost:8080/write/WriteCrimesByDistrict
 	http://localhost:8080/write/WriteCrimesByCrimeType
-These will write Result/*.json files
+These will write Result/*.json files.
 	
 All the file paths are configured in application.conf. 
 
-##Technical Aspects
+## Technical Aspects
 -----
 
-The project is build using Akka framework to handle the HTTP communication and the interaction with Spark. I've taken the decision go with Akka because I've imagined a microservice application where
-different callers are able to schedule Spark jobs asynchronously. For the moment the application uses only GET requests, but it can be extended to handle messages exchanged between client and actors,
+The project is build using Akka framework to handle the HTTP communication and the interaction with Spark. I've taken the decision to go with Akka because I've imagined a microservice application where
+different callers are able to schedule Spark jobs asynchronously. 
+
+For the moment the application uses only GET requests, but it can be extended to handle messages exchanged between client and actors,
 as Akka HTTP supports JSON marshalling, another reason for choosing it. You can find more about Akka and Akka HTTP in the links and examples below (it's what I've used to implement the application):
 
-	https://www.lightbend.com/akka-platform
-	https://developer.lightbend.com/guides/akka-quickstart-scala/
-	https://developer.lightbend.com/guides/akka-http-quickstart-scala/index.html
+[Akka](https://www.lightbend.com/akka-platform)
+[Akka Quickstart](https://developer.lightbend.com/guides/akka-quickstart-scala/)
+[Akka HTTP Quickstart](https://developer.lightbend.com/guides/akka-http-quickstart-scala/index.html)
 
 Also **I've never used Akka** and was curious to play around with the framework :).
 
 ### Basic acrhitecture and how it works:
 
-When the app starts, it creates an ActorSystem with a Data Viewer Actor and a Data Writer Actor, and binds the defined routes to a port, in this case, localhost:8080.
-The routes are defined using Akka DSL (domain specific language). As taken from the Akka example documentation, "a Route defines: the paths (/view, /write ...), the available HTTP methods, and when applicable, parameters or payloads."
-When the endpoints are invoked, they will interact with the Writer Actor or the Viewer Actor.
+When the app starts, it creates an ActorSystem with a Data Viewer Actor and a Data Writer Actor, and binds specific routes to a port, in this case, localhost:8080.
 
+The routes are built using Akka DSL (domain specific language). As taken from the Akka example documentation, "a Route defines: the paths (/view, /write ...), the available HTTP methods, and when applicable, parameters or payloads."
+
+When the endpoints are invoked, they will interact with the Writer Actor or the Viewer Actor.
 Each actor knows how to handle specific commands. The actors have their own Parser instances that are used to further interact with Spark. I've implemented it this way so that I would be able to mock the Parsers when unit testing the actors.
 
 ### MainApp.scala
 
 Holds the app main method. It binds the routes to the http server and launches it.
-It also initiates the SparkSession so that we don't have to wait for it at the first request. 
+It also initiates the SparkSession so that we don't have to wait for it at when running the first request. 
 
 ### AppRoutes.scala
 
@@ -116,7 +119,7 @@ E.g. http://localhost:8080/view/GetCrimesForDistrict?district=bedfordshire ask t
 
 	dataViewerActor.ask(DataViewerActor.RunCommand(command, district, _)) 
 	
-Also, here the timeout duration is specified. If a request takes longer, it will timeout. And Spark requests tend to take longer, so the job is started and a reply is sent to the caller without waiting for the job to finish.
+Also, here the timeout duration is specified. If a request takes longer, it will timeout. And as Spark requests tend to not be that quick, the job is started and a reply is sent to the caller without waiting for the job to finish.
 There are some Spark jobs that don't take that long ( GetCrimeTypes, GetDistricts ..) and the result is directly sent as the reply. Here it would be nice to use the JSON marshaller provided in the Akka HTTP framework for the replies.
 
 	private implicit val timeout = Timeout(15.seconds)
