@@ -1,5 +1,5 @@
 # Spark Assessment
-================
+
 
 ## About
 -----
@@ -9,6 +9,7 @@ provides the user with an interface to extract information from these files.
 
 ## Setup
 -----
+Exctract the My App.zip file from here (https://drive.google.com/file/d/1KRmik1aRMojba3A2eKonmcNBv55zo2HU/view?usp=sharing)
 The application is packaged with sbt-assembly in a fat jar file:
 
 	UKCrimeDataWithSpark.jar
@@ -157,6 +158,28 @@ Also in the build.sbt file some configuration needed to be done in order to hand
 	test in assembly := {}
 
 	mainClass in assembly := Some("MainApp")
+
+### IntelliJ
+
+I've developed it using IntelliJ.
+You can open the project with IntelliJ.
+Go to SBT Settings and make sure to set the JVM/JRE to Java8. (File -> Settings -> Build, Execution, Deployment -> Build Tools -> sbt)
+Build -> Rebuild Project
+When trying to run MainApp (right click on MainApp.main method and Run 'MainApp' I was still getting an error:
+
+	"C:\Program Files\Java\jdk-13.0.2\bin\java.exe" ...
+	Error: Could not find or load main class MainApp
+	Caused by: java.lang.ClassNotFoundException: MainApp
+
+To fix this (still using java 13 to run), go to Run -> Edit Configurations -> MainApp (or the config name, by default it will be the same as the class) and set the JRE to 1.8.
+Now I only got the error below:
+
+	"C:\Program Files\Java\jdk1.8.0_271\bin\java.exe"
+	Error: Could not find or load main class MainApp
+	
+A step forward :). Now close and re-open the project and it should work (or close and re-open IntelliJ).
+
+For the assembly, run >assembly in the sbt shell and it should package a jar in \target\scala-2.12
 
 ### Worst day ever :) 
 
